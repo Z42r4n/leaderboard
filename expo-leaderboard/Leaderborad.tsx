@@ -1,5 +1,5 @@
 import { Text, View, Image } from "react-native";
-import Animated, { FadeInRight } from "react-native-reanimated";
+import Animated, { FadeInRight, runOnJS } from "react-native-reanimated";
 
 const users = [
   { name: "Zaran", score: "12" },
@@ -14,15 +14,19 @@ const users = [
 type PlaceProps = {
   user: (typeof users)[0];
   index: number;
+  onFinish?: () => void;
 };
 
-function Place({ user, index }: PlaceProps) {
+function Place({ user, index, onFinish }: PlaceProps) {
   return (
     <Animated.View
       entering={FadeInRight.delay(index * _stagger)
         .springify()
         .damping(80)
-        .stiffness(200)}
+        .stiffness(200)
+        .withCallback((finished) => {
+          if (finished && onFinish) runOnJS(onFinish)();
+        })}
     >
       <View
         style={{
@@ -55,7 +59,18 @@ export default function Leaderboard() {
       }}
     >
       {users.map((user, index) => (
-        <Place key={index} user={user} index={index} />
+        <Place
+          key={index}
+          user={user}
+          index={index}
+          onFinish={
+            index === users.length - 1
+              ? () => {
+                  console.log(index);
+                }
+              : undefined
+          }
+        />
       ))}
     </View>
   );
